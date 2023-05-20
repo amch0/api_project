@@ -1,0 +1,83 @@
+{
+	"info": {
+		"_postman_id": "a187e079-7388-45b0-9b97-5f4745ee4766",
+		"name": "api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27446729"
+	},
+	"item": [
+		{
+			"name": "forecast_endpoint",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/forecast?place=bihac",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"forecast"
+					],
+					"query": [
+						{
+							"key": "place",
+							"value": "bihac"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "current",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/current?place=bihac",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"current"
+					],
+					"query": [
+						{
+							"key": "place",
+							"value": "bihac"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "maps",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/map/clouds_new/3/2/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"map",
+						"clouds_new",
+						"3",
+						"2",
+						"3"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
