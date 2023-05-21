@@ -2,7 +2,7 @@
 
 This API project is done in Node JS. 
 API provider: OpenWeatherMap.
-We have three endpoints: forecast, current and map. 
+Endpoints: forecast, current and map. 
 
 To start this app you need to:
 1. Clone the repository to your device

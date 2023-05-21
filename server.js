@@ -128,7 +128,7 @@ app.get("/forecast", (req, res) => {
  */
 app.get("/current", (req, res) => {
     const place = req.query.place;
-    const key = `current_${place}`; // Key for caching
+    const key = `current_${place}`; 
   
     
     const fetchCurrentWeather = () => {
