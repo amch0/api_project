@@ -3,7 +3,9 @@ const request = require("request");
 const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
+
 const app = express();
+const { getData } = require("./caching");
 
 const spec = {
   definition: {
@@ -52,26 +54,50 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  */
 
 app.get("/forecast", (req, res) => {
-  let place = req.query.place;
-  let url = `https://api.openweathermap.org/data/2.5/forecast?q=${place}&appid=c562e9d86bf94763385d0dc737069c0f`;
-
-  console.log('Incoming request for forecast:', req.query);
-
-  request(url, function (error, response, body) {
-    let data = JSON.parse(body);
-    if (data.cod === '200') {
-      console.log('Forecast retrieved for', place);
-      res.send(`The forecast weather for ${place} is ${data.list[0].weather[0].description}`);
-    } else if (data.cod === '404') {
-      console.log('Error retrieving forecast:', data.message);
-      res.status(400).send(`Error: ${data.message}`);
-    } else {
-      console.log('Unexpected error:');
-      console.log('statusCode:', response && response.statusCode);
-      console.log('body:', body);
-    }
+    const place = req.query.place;
+    const key = `forecast_${place}`; 
+  
+    
+    const fetchForecast = () => {
+      return new Promise((resolve, reject) => {
+        const url = `https://api.openweathermap.org/data/2.5/forecast?q=${place}&appid=c562e9d86bf94763385d0dc737069c0f`;
+  
+        console.log("Incoming request for forecast:", req.query);
+  
+        request(url, function (error, response, body) {
+          if (error) {
+            reject(error);
+            return;
+          }
+  
+          const data = JSON.parse(body);
+          if (data.cod === "200") {
+            console.log("Forecast retrieved for", place);
+            const forecast = data.list[0].weather[0].description;
+            resolve(forecast);
+          } else if (data.cod === "404") {
+            console.log("Error retrieving forecast:", data.message);
+            reject(new Error(data.message));
+          } else {
+            console.log("Unexpected error:");
+            console.log("statusCode:", response && response.statusCode);
+            console.log("body:", body);
+            reject(new Error("Unexpected error occurred"));
+          }
+        });
+      });
+    };
+  
+    // Call the getData function from caching.js
+    getData(key, fetchForecast)
+      .then((forecast) => {
+        res.send(`The forecast weather for ${place} is ${forecast}`);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        res.status(400).send("Internal Server Error");
+      });
   });
-});
 
 
 /**
@@ -101,26 +127,49 @@ app.get("/forecast", (req, res) => {
  *               type: string
  */
 app.get("/current", (req, res) => {
-    let place = req.query.place;
-    let url = `https://api.openweathermap.org/data/2.5/weather?q=${place}&appid=c562e9d86bf94763385d0dc737069c0f`;
+    const place = req.query.place;
+    const key = `current_${place}`; // Key for caching
   
-    console.log('Incoming request for current weather:', req.query);
+    
+    const fetchCurrentWeather = () => {
+      return new Promise((resolve, reject) => {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${place}&appid=c562e9d86bf94763385d0dc737069c0f`;
   
-    request(url, function (error, response, body) {
-      let data = JSON.parse(body);
-      if (data.cod === 200) {
-        console.log('Current weather retrieved for', place);
-        let weatherDescription = data.weather[0].description;
+        console.log("Incoming request for current weather:", req.query);
+  
+        request(url, function (error, response, body) {
+          if (error) {
+            reject(error);
+            return;
+          }
+  
+   const data = JSON.parse(body);
+          if (data.cod === 200) {
+            console.log('Current weather retrieved for', place);
+            const weatherDescription = data.weather[0].description;
+            resolve(weatherDescription);
+          } else if (data.cod === '404') {
+            console.log('Error retrieving current weather:', data.message);
+            reject(new Error(data.message));
+          } else {
+            console.log('Unexpected error:');
+            console.log('statusCode:', response && response.statusCode);
+            console.log('body:', body);
+            reject(new Error('Unexpected error occurred'));
+          }
+        });
+      });
+    };
+  
+   // Call the getData function from caching.js
+    getData(key, fetchCurrentWeather)
+      .then((weatherDescription) => {
         res.send(`The current weather in ${place} is ${weatherDescription}`);
-      } else if (data.cod === '404') {
-        console.log('Error retrieving current weather:', data.message);
-        res.status(400).send(`Error: ${data.message}`);
-      } else {
-        console.log('Unexpected error:');
-        console.log('statusCode:', response && response.statusCode);
-        console.log('body:', body);
-      }
-    });
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        res.status(400).send('Internal Server Error');
+      });
   });
   
 
