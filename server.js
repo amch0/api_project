@@ -5,7 +5,6 @@ const swaggerUi = require("swagger-ui-express");
 
 const app = express();
 
-
 const spec = {
   definition: {
     openapi: '3.0.0',
@@ -19,7 +18,7 @@ const spec = {
       },
     ],
   },
-  apis: ['./server.js'], // Update the file path to your server.js file
+  apis: ['./server.js'], 
 };
 
 const swaggerSpec = swaggerJSDoc(spec);
@@ -52,22 +51,26 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  *               type: string
  */
 
-  
 app.get("/forecast", (req, res) => {
-    let place = req.query.place;
-    let url = `https://api.openweathermap.org/data/2.5/forecast?q=${place}&appid=c562e9d86bf94763385d0dc737069c0f`;
+  let place = req.query.place;
+  let url = `https://api.openweathermap.org/data/2.5/forecast?q=${place}&appid=c562e9d86bf94763385d0dc737069c0f`;
 
-    request(url, function (error, response, body) {
-        let data = JSON.parse(body);
-        if (data.cod === '200') {
-            res.send(`The forecast weather for ${place} is ${data.list[0].weather[0].description}`);
-        } else if (data.cod === '404') {
-            res.status(400).send(`Error: ${data.message}`);
-        } else {
-            console.log('statusCode:', response && response.statusCode);
-            console.log('body:', body);
-        }
-    });
+  console.log('Incoming request for forecast:', req.query);
+
+  request(url, function (error, response, body) {
+    let data = JSON.parse(body);
+    if (data.cod === '200') {
+      console.log('Forecast retrieved for', place);
+      res.send(`The forecast weather for ${place} is ${data.list[0].weather[0].description}`);
+    } else if (data.cod === '404') {
+      console.log('Error retrieving forecast:', data.message);
+      res.status(400).send(`Error: ${data.message}`);
+    } else {
+      console.log('Unexpected error:');
+      console.log('statusCode:', response && response.statusCode);
+      console.log('body:', body);
+    }
+  });
 });
 
 
@@ -100,20 +103,26 @@ app.get("/forecast", (req, res) => {
 app.get("/current", (req, res) => {
     let place = req.query.place;
     let url = `https://api.openweathermap.org/data/2.5/weather?q=${place}&appid=c562e9d86bf94763385d0dc737069c0f`;
-
+  
+    console.log('Incoming request for current weather:', req.query);
+  
     request(url, function (error, response, body) {
-        let data = JSON.parse(body);
-        if (data.cod === 200) {
-            let weatherDescription = data.weather[0].description;
-            res.send(`The current weather in ${place} is ${weatherDescription}`);
-        } else if (data.cod === '404') {
-            res.status(400).send(`Error: ${data.message}`);
-        } else {
-            console.log('statusCode:', response && response.statusCode);
-            console.log('body:', body);
-        }
+      let data = JSON.parse(body);
+      if (data.cod === 200) {
+        console.log('Current weather retrieved for', place);
+        let weatherDescription = data.weather[0].description;
+        res.send(`The current weather in ${place} is ${weatherDescription}`);
+      } else if (data.cod === '404') {
+        console.log('Error retrieving current weather:', data.message);
+        res.status(400).send(`Error: ${data.message}`);
+      } else {
+        console.log('Unexpected error:');
+        console.log('statusCode:', response && response.statusCode);
+        console.log('body:', body);
+      }
     });
-});
+  });
+  
 
 /**
  * @swagger
@@ -161,17 +170,26 @@ app.get("/current", (req, res) => {
  *               type: string
  */
 app.get("/map/:layer/:z/:x/:y", (req, res) => {
-    const { layer, z, x, y } = req.params;
-    const apiKey = "c562e9d86bf94763385d0dc737069c0f";
-    const url = `https://tile.openweathermap.org/map/${layer}/${z}/${x}/${y}.png?appid=${apiKey}`;
+  const { layer, z, x, y } = req.params;
+  const apiKey = "c562e9d86bf94763385d0dc737069c0f";
+  const url = `https://tile.openweathermap.org/map/${layer}/${z}/${x}/${y}.png?appid=${apiKey}`;
 
-    request(url)
-        .pipe(res)
-        .on("error", (err) => {
-            console.error(err);
-            res.sendStatus(400);
-        });
+  console.log('Incoming request for map:', req.params);
+
+  request(url)
+    .on("response", (response) => {
+      console.log('Map request status:', response.statusCode);
+    })
+    .on("error", (err) => {
+      console.error('Error retrieving map:', err);
+      res.sendStatus(400);
+    })
+    .pipe(res);
 });
 
 
-app.listen(8000, () => console.log("Server started on port 8000"));
+
+app.listen(8000, () => {
+    console.log("Server started on port 8000");
+  });
+  
